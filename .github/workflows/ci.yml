@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          go install github.com/rhysd/actionlint/cmd/actionlint@latest
+          sudo wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
+          sudo chmod +x /usr/local/bin/hadolint
+          sudo apt-get install -y shellcheck
+
+      - name: Lint GitHub Actions workflows
+        run: actionlint
+
+      - name: Lint shell scripts
+        run: find . -name "*.sh" -exec shellcheck {} +
+
+      - name: Lint Dockerfiles
+        run: find . -name "Dockerfile*" -exec hadolint {} +
+
+      - name: Lint YAML
+        run: |
+          pip install yamllint
+          yamllint -c .config/yamllint.yml .

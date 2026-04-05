@@ -1,0 +1,43 @@
+name: Go CI (Reusable)
+
+on:
+  workflow_call:
+
+jobs:
+  go-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+
+      - name: Test
+        run: go test -race -coverprofile=coverage.out ./...
+
+      - name: Vulnerability check
+        run: |
+          go install golang.org/dl/govulncheck@latest
+          govulncheck ./...
+
+      - name: Build
+        run: go build -o /dev/null ./cmd/...
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.out
