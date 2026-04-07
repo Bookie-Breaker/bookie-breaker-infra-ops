@@ -28,6 +28,7 @@ task bootstrap    # Install tools and hooks
 ```
 
 From root `BookieBreaker/`:
+
 ```bash
 task up           # Start full stack
 task down         # Stop all services
