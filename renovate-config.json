@@ -1,10 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "docker:enableMajor",
-    ":semanticCommits"
-  ],
+  "extends": ["config:recommended", "docker:enableMajor", ":semanticCommits"],
   "schedule": ["before 8am on monday"],
   "timezone": "America/Chicago",
   "labels": ["chore", "dependencies"],
