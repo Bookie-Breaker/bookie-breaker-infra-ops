@@ -10,3 +10,42 @@ tasks:
     cmds:
       - mise install
       - lefthook install
+
+  up:
+    desc: Start all infrastructure services
+    cmds:
+      - docker compose up -d
+
+  down:
+    desc: Stop all services and remove containers
+    cmds:
+      - docker compose down
+
+  build:
+    desc: Build (or rebuild) all containers
+    cmds:
+      - docker compose build
+
+  logs:
+    desc: Tail logs from all services
+    cmds:
+      - docker compose logs -f
+
+  logs:service:
+    desc: "Tail logs from a specific service (usage: task logs:service -- redis)"
+    cmds:
+      - docker compose logs -f {{.CLI_ARGS}}
+
+  db:seed:
+    desc: Seed databases with development fixture data
+    cmds:
+      - ./scripts/seed-data.sh
+
+  db:reset:
+    desc: Drop and recreate all volumes, then restart
+    cmds:
+      - docker compose down -v
+      - docker compose up -d
+      - echo "Waiting for Postgres to be ready..."
+      - sleep 5
+      - task db:seed
