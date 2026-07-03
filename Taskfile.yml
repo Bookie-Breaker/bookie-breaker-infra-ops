@@ -36,6 +36,28 @@ tasks:
     cmds:
       - docker compose logs -f {{.CLI_ARGS}}
 
+  lint:
+    desc: Lint YAML, shell scripts, workflows, and Dockerfiles
+    cmds:
+      - yamllint -c .config/yamllint.yml .
+      - shellcheck scripts/*.sh
+      - actionlint
+      - find . -name "Dockerfile*" -not -path "./.git/*" -exec hadolint {} +
+
+  test:
+    desc: Validate Docker Compose configuration
+    cmds:
+      - docker compose config --quiet
+      - docker compose -f docker-compose.yml -f docker-compose.gpu.yml config --quiet
+
+  db:migrate:
+    desc: Run database migrations (delegates to sibling service repos)
+    preconditions:
+      - sh: test -d ../bookie-breaker-lines-service
+        msg: bookie-breaker-lines-service must be cloned alongside this repo
+    cmds:
+      - cd ../bookie-breaker-lines-service && go run cmd/migrate/main.go up
+
   db:seed:
     desc: Seed databases with development fixture data
     cmds:
