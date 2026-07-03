@@ -45,7 +45,7 @@ services:
     volumes:
       - ollama-data:/root/.ollama
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags || exit 1"]
+      test: ["CMD", "ollama", "ls"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -73,7 +73,7 @@ services:
       - bookiebreaker
 
   prometheus:
-    image: prom/prometheus:v2.53
+    image: prom/prometheus:v2.53.5
     ports:
       - "9090:9090"
     volumes:
@@ -86,7 +86,7 @@ services:
       - bookiebreaker
 
   tempo:
-    image: grafana/tempo:2.4
+    image: grafana/tempo:2.4.2
     ports:
       - "3200:3200"
     volumes:
@@ -98,7 +98,7 @@ services:
       - bookiebreaker
 
   loki:
-    image: grafana/loki:3.0
+    image: grafana/loki:3.0.1
     ports:
       - "3100:3100"
     volumes:
@@ -110,7 +110,7 @@ services:
       - bookiebreaker
 
   grafana:
-    image: grafana/grafana:11.0
+    image: grafana/grafana:11.6.16
     ports:
       - "3001:3000"
     environment:
