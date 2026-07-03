@@ -27,7 +27,7 @@ CREATE INDEX idx_raw_api_responses_service_source
 
 -- Grant INSERT + SELECT to service roles that archive responses
 GRANT INSERT, SELECT ON public.raw_api_responses TO lines_svc;
-GRANT INSERT, SELECT ON public.raw_api_responses TO predictions_svc;
+GRANT INSERT, SELECT ON public.raw_api_responses TO statistics_svc;
 
 -- Compression: compress after 7 days
 ALTER TABLE public.raw_api_responses SET (
