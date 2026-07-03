@@ -16,6 +16,7 @@ jobs:
       - name: Install tools
         run: |
           go install github.com/rhysd/actionlint/cmd/actionlint@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
           HADOLINT_URL="https://github.com/hadolint/hadolint/releases"
           HADOLINT_URL="${HADOLINT_URL}/latest/download/hadolint-Linux-x86_64"
           sudo wget -O /usr/local/bin/hadolint "$HADOLINT_URL"
