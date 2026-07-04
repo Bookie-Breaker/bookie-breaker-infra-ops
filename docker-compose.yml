@@ -37,6 +37,66 @@ services:
     networks:
       - bookiebreaker
 
+  # ── Application Services ───────────────────────────────
+  # Service role passwords are the literal "localdev" from
+  # init-db/04-create-roles.sql; POSTGRES_PASSWORD only rotates the
+  # bookiebreaker superuser.
+  lines-service:
+    build:
+      context: ../bookie-breaker-lines-service
+    ports:
+      - "8001:8001"
+    environment:
+      DATABASE_URL: postgres://lines_svc:localdev@postgres:5432/bookiebreaker?search_path=lines,public
+      REDIS_URL: redis://redis:6379
+      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+      ODDS_API_KEY: ${ODDS_API_KEY:-}
+      ODDS_API_SPORTS: ${ODDS_API_SPORTS:-basketball_nba}
+      ODDS_API_POLL_INTERVAL: ${ODDS_API_POLL_INTERVAL:-300}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8001/api/v1/lines/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - bookiebreaker
+
+  statistics-service:
+    build:
+      context: ../bookie-breaker-statistics-service
+    ports:
+      - "8002:8002"
+    environment:
+      DATABASE_URL: postgres://statistics_svc:localdev@postgres:5432/bookiebreaker?search_path=public
+      REDIS_URL: redis://redis:6379
+      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+      INJURY_SOURCE: ${INJURY_SOURCE:-espn}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8002/api/v1/stats/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - bookiebreaker
+
   # ── LLM ────────────────────────────────────────────────
   ollama:
     image: ollama/ollama:latest
