@@ -173,6 +173,87 @@ services:
     networks:
       - bookiebreaker
 
+  bookie-emulator:
+    build:
+      context: ../bookie-breaker-bookie-emulator
+    ports:
+      - "8005:8005"
+    environment:
+      DATABASE_URL: postgres://emulator_svc:localdev@postgres:5432/bookiebreaker?search_path=emulator,public
+      REDIS_URL: redis://redis:6379
+      LINES_SERVICE_URL: http://lines-service:8001
+      STATISTICS_SERVICE_URL: http://statistics-service:8002
+      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      lines-service:
+        condition: service_healthy
+      statistics-service:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request;urllib.request.urlopen('http://localhost:8005/api/v1/emulator/health')
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - bookiebreaker
+
+  agent:
+    build:
+      context: ../bookie-breaker-agent
+    ports:
+      - "8006:8006"
+    environment:
+      DATABASE_URL: postgres://agent_svc:localdev@postgres:5432/bookiebreaker?search_path=agent,public
+      REDIS_URL: redis://redis:6379
+      LINES_SERVICE_URL: http://lines-service:8001
+      STATISTICS_SERVICE_URL: http://statistics-service:8002
+      SIMULATION_ENGINE_URL: http://simulation-engine:8003
+      PREDICTION_ENGINE_URL: http://prediction-engine:8004
+      BOOKIE_EMULATOR_URL: http://bookie-emulator:8005
+      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      lines-service:
+        condition: service_healthy
+      statistics-service:
+        condition: service_healthy
+      simulation-engine:
+        condition: service_healthy
+      prediction-engine:
+        condition: service_healthy
+      bookie-emulator:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request;urllib.request.urlopen('http://localhost:8006/api/v1/agent/health')
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - bookiebreaker
+
   # ── LLM ────────────────────────────────────────────────
   ollama:
     image: ollama/ollama:latest

@@ -57,9 +57,15 @@ tasks:
         msg: bookie-breaker-lines-service must be cloned alongside this repo
       - sh: test -d ../bookie-breaker-prediction-engine
         msg: bookie-breaker-prediction-engine must be cloned alongside this repo
+      - sh: test -d ../bookie-breaker-bookie-emulator
+        msg: bookie-breaker-bookie-emulator must be cloned alongside this repo
+      - sh: test -d ../bookie-breaker-agent
+        msg: bookie-breaker-agent must be cloned alongside this repo
     cmds:
       - cd ../bookie-breaker-lines-service && go run cmd/migrate/main.go up
       - cd ../bookie-breaker-prediction-engine && uv run alembic upgrade head
+      - cd ../bookie-breaker-bookie-emulator && uv run alembic upgrade head
+      - cd ../bookie-breaker-agent && uv run alembic upgrade head
 
   db:seed:
     desc: Seed databases with development fixture data
@@ -73,4 +79,5 @@ tasks:
       - docker compose up -d
       - echo "Waiting for Postgres to be ready..."
       - sleep 5
+      - task db:migrate
       - task db:seed
