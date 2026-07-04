@@ -51,12 +51,15 @@ tasks:
       - docker compose -f docker-compose.yml -f docker-compose.gpu.yml config --quiet
 
   db:migrate:
-    desc: Run database migrations (delegates to sibling service repos)
+    desc: Run database migrations (delegates to sibling service repos; ADR-019 ordering)
     preconditions:
       - sh: test -d ../bookie-breaker-lines-service
         msg: bookie-breaker-lines-service must be cloned alongside this repo
+      - sh: test -d ../bookie-breaker-prediction-engine
+        msg: bookie-breaker-prediction-engine must be cloned alongside this repo
     cmds:
       - cd ../bookie-breaker-lines-service && go run cmd/migrate/main.go up
+      - cd ../bookie-breaker-prediction-engine && uv run alembic upgrade head
 
   db:seed:
     desc: Seed databases with development fixture data

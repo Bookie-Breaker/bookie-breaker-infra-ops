@@ -97,6 +97,82 @@ services:
     networks:
       - bookiebreaker
 
+  # python:slim images have no wget/curl, hence the python healthchecks
+  simulation-engine:
+    build:
+      context: ../bookie-breaker-simulation-engine
+    ports:
+      - "8003:8003"
+    environment:
+      REDIS_URL: redis://redis:6379
+      STATISTICS_SERVICE_URL: http://statistics-service:8002
+      SIMULATION_ITERATIONS: ${SIMULATION_ITERATIONS:-10000}
+      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      redis:
+        condition: service_healthy
+      statistics-service:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request;urllib.request.urlopen('http://localhost:8003/api/v1/sim/health')
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - bookiebreaker
+
+  prediction-engine:
+    build:
+      context: ../bookie-breaker-prediction-engine
+    ports:
+      - "8004:8004"
+    environment:
+      DATABASE_URL: postgres://predictions_svc:localdev@postgres:5432/bookiebreaker?search_path=predictions,public
+      REDIS_URL: redis://redis:6379
+      STATISTICS_SERVICE_URL: http://statistics-service:8002
+      LINES_SERVICE_URL: http://lines-service:8001
+      SIMULATION_SERVICE_URL: http://simulation-engine:8003
+      MODEL_DIR: /models
+      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      # bootstrap model is baked into the image; the volume persists
+      # retrained artifacts across container recreation
+      - prediction-models:/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      lines-service:
+        condition: service_healthy
+      statistics-service:
+        condition: service_healthy
+      simulation-engine:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request;urllib.request.urlopen('http://localhost:8004/api/v1/predict/health')
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    networks:
+      - bookiebreaker
+
   # ── LLM ────────────────────────────────────────────────
   ollama:
     image: ollama/ollama:latest
@@ -190,6 +266,7 @@ services:
 
 volumes:
   postgres-data:
+  prediction-models:
   ollama-data:
   prometheus-data:
   tempo-data:
