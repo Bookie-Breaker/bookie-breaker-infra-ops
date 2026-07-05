@@ -303,6 +303,52 @@ services:
     networks:
       - bookiebreaker
 
+  ui:
+    build:
+      context: ../bookie-breaker-ui
+    ports:
+      - "3000:3000"
+    environment:
+      # server-side only: the browser talks to the SvelteKit server, which
+      # proxies to the internal services (no CORS, no exposed backends)
+      AGENT_URL: http://agent:8006
+      LINES_SERVICE_URL: http://lines-service:8001
+      STATISTICS_SERVICE_URL: http://statistics-service:8002
+      SIMULATION_ENGINE_URL: http://simulation-engine:8003
+      PREDICTION_ENGINE_URL: http://prediction-engine:8004
+      BOOKIE_EMULATOR_URL: http://bookie-emulator:8005
+      # live-updates SSE bridge (events:edge.detected, events:bet.graded, ...)
+      REDIS_URL: redis://redis:6379
+      # adapter-node origin check for form actions
+      ORIGIN: ${UI_ORIGIN:-http://localhost:3000}
+      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+    depends_on:
+      redis:
+        condition: service_healthy
+      agent:
+        condition: service_healthy
+      lines-service:
+        condition: service_healthy
+      statistics-service:
+        condition: service_healthy
+      bookie-emulator:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    healthcheck:
+      # node:slim images have no wget/curl; Node >= 18 ships global fetch
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/healthz').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - bookiebreaker
+
   # ── LLM ────────────────────────────────────────────────
   ollama:
     image: ollama/ollama:latest
