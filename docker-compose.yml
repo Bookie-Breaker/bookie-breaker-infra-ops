@@ -222,6 +222,14 @@ services:
       SIMULATION_ENGINE_URL: http://simulation-engine:8003
       PREDICTION_ENGINE_URL: http://prediction-engine:8004
       BOOKIE_EMULATOR_URL: http://bookie-emulator:8005
+      # LLM provider (ADR-011): compose defaults to the local Ollama for
+      # zero-cost dev; set LLM_PROVIDER=anthropic + ANTHROPIC_API_KEY in
+      # .env for cloud models. No depends_on ollama: the agent serves with
+      # LLM features degraded while Ollama starts or pulls its model.
+      LLM_PROVIDER: ${LLM_PROVIDER:-ollama}
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://ollama:11434}
+      LLM_MODEL: ${LLM_MODEL:-phi3:mini}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
       LOG_LEVEL: ${LOG_LEVEL:-info}
     depends_on:
@@ -254,6 +262,47 @@ services:
     networks:
       - bookiebreaker
 
+  mcp-server:
+    build:
+      context: ../bookie-breaker-mcp-server
+    ports:
+      - "8007:8007"
+    environment:
+      MCP_TRANSPORT: http
+      AGENT_URL: http://agent:8006
+      LINES_SERVICE_URL: http://lines-service:8001
+      STATISTICS_SERVICE_URL: http://statistics-service:8002
+      SIMULATION_ENGINE_URL: http://simulation-engine:8003
+      PREDICTION_ENGINE_URL: http://prediction-engine:8004
+      BOOKIE_EMULATOR_URL: http://bookie-emulator:8005
+      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      agent:
+        condition: service_healthy
+      lines-service:
+        condition: service_healthy
+      statistics-service:
+        condition: service_healthy
+      simulation-engine:
+        condition: service_healthy
+      prediction-engine:
+        condition: service_healthy
+      bookie-emulator:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request;urllib.request.urlopen('http://localhost:8007/health')
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - bookiebreaker
+
   # ── LLM ────────────────────────────────────────────────
   ollama:
     image: ollama/ollama:latest
@@ -267,6 +316,20 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+    networks:
+      - bookiebreaker
+
+  # One-shot model pull (idempotent). Nothing depends on it, so a slow
+  # multi-GB pull never blocks `task up`; progress shows in `task logs`.
+  ollama-init:
+    image: ollama/ollama:latest
+    entrypoint: ["/bin/sh", "-c", "ollama pull ${OLLAMA_MODEL:-phi3:mini}"]
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
     networks:
       - bookiebreaker
 
