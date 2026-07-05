@@ -18,12 +18,19 @@ psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$FIXTURES_DIR/s
 echo "Seeding sample line snapshots..."
 psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$FIXTURES_DIR/sample-lines.sql"
 
+echo "Seeding paper bets and bankroll history..."
+psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$FIXTURES_DIR/paper-bets.sql"
+
 echo ""
 echo "Verifying seed data:"
 echo -n "  Sportsbooks: "
 psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM lines.sportsbooks;"
 echo -n "  Line snapshots: "
 psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM lines.line_snapshots;"
+echo -n "  Paper bets: "
+psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM emulator.paper_bets;"
+echo -n "  Bet grades: "
+psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM emulator.bet_grades;"
 
 echo ""
 echo "Seed data loaded successfully."

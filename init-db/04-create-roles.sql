@@ -26,13 +26,21 @@ GRANT ALL PRIVILEGES ON SCHEMA emulator TO emulator_svc;
 ALTER DEFAULT PRIVILEGES IN SCHEMA emulator GRANT ALL ON TABLES TO emulator_svc;
 ALTER DEFAULT PRIVILEGES IN SCHEMA emulator GRANT ALL ON SEQUENCES TO emulator_svc;
 
+-- agent role
+CREATE ROLE agent_svc WITH LOGIN PASSWORD 'localdev';
+GRANT CONNECT ON DATABASE bookiebreaker TO agent_svc;
+GRANT USAGE ON SCHEMA public TO agent_svc;
+GRANT ALL PRIVILEGES ON SCHEMA agent TO agent_svc;
+ALTER DEFAULT PRIVILEGES IN SCHEMA agent GRANT ALL ON TABLES TO agent_svc;
+ALTER DEFAULT PRIVILEGES IN SCHEMA agent GRANT ALL ON SEQUENCES TO agent_svc;
+
 -- statistics-service role (no dedicated schema; archives to public.raw_api_responses only)
 CREATE ROLE statistics_svc WITH LOGIN PASSWORD 'localdev';
 GRANT CONNECT ON DATABASE bookiebreaker TO statistics_svc;
 GRANT USAGE ON SCHEMA public TO statistics_svc;
 
 -- Grant enum type usage to all service roles
-GRANT USAGE ON TYPE league_enum TO lines_svc, predictions_svc, emulator_svc, statistics_svc;
-GRANT USAGE ON TYPE market_type_enum TO lines_svc, predictions_svc, emulator_svc, statistics_svc;
-GRANT USAGE ON TYPE sport_enum TO lines_svc, predictions_svc, emulator_svc, statistics_svc;
-GRANT USAGE ON TYPE bet_result_enum TO lines_svc, predictions_svc, emulator_svc, statistics_svc;
+GRANT USAGE ON TYPE league_enum TO lines_svc, predictions_svc, emulator_svc, agent_svc, statistics_svc;
+GRANT USAGE ON TYPE market_type_enum TO lines_svc, predictions_svc, emulator_svc, agent_svc, statistics_svc;
+GRANT USAGE ON TYPE sport_enum TO lines_svc, predictions_svc, emulator_svc, agent_svc, statistics_svc;
+GRANT USAGE ON TYPE bet_result_enum TO lines_svc, predictions_svc, emulator_svc, agent_svc, statistics_svc;
