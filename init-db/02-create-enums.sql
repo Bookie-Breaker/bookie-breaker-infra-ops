@@ -2,7 +2,8 @@
 -- Values from bookie-breaker-docs/schemas/database-schemas/README.md.
 
 CREATE TYPE league_enum AS ENUM (
-    'NFL', 'NBA', 'MLB', 'NCAA_FB', 'NCAA_BB', 'NCAA_BSB'
+    'NFL', 'NBA', 'MLB', 'NCAA_FB', 'NCAA_BB', 'NCAA_BSB',
+    'FIFA_WC', 'EPL', 'NHL', 'NCAA_HKY'
 );
 
 CREATE TYPE market_type_enum AS ENUM (
@@ -10,7 +11,7 @@ CREATE TYPE market_type_enum AS ENUM (
 );
 
 CREATE TYPE sport_enum AS ENUM (
-    'FOOTBALL', 'BASKETBALL', 'BASEBALL'
+    'FOOTBALL', 'BASKETBALL', 'BASEBALL', 'SOCCER', 'HOCKEY'
 );
 
 CREATE TYPE bet_result_enum AS ENUM (
