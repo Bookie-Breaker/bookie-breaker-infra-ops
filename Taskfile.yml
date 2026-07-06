@@ -62,6 +62,7 @@ tasks:
       - sh: test -d ../bookie-breaker-agent
         msg: bookie-breaker-agent must be cloned alongside this repo
     cmds:
+      - ./scripts/migrate-enums.sh
       - cd ../bookie-breaker-lines-service && go run cmd/migrate/main.go up
       - cd ../bookie-breaker-prediction-engine && uv run alembic upgrade head
       - cd ../bookie-breaker-bookie-emulator && uv run alembic upgrade head
