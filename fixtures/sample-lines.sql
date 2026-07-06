@@ -1,4 +1,4 @@
--- Sample NBA, FIFA_WC, and MLB line snapshots for development testing.
+-- Sample NBA, FIFA_WC, MLB, and NFL line snapshots for development testing.
 -- Uses sportsbook keys from the sportsbooks seed data.
 -- These are fictional lines for testing purposes only.
 
@@ -91,4 +91,28 @@ BEGIN
         -- Run line (baseball spread)
         ('mlb_nyy_lad_20260712', pin_id, 'MLB', 'SPREAD', 'New York Yankees -1.5', -1.5, 140, 2.400, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api'),
         ('mlb_nyy_lad_20260712', pin_id, 'MLB', 'SPREAD', 'Los Angeles Dodgers +1.5', 1.5, -165, 1.606, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api');
+
+    -- Game 5 (NFL): Kansas City Chiefs vs Buffalo Bills, 2026-09-13 week 1.
+    -- line_snapshots has no side column: lines-service derives side at read
+    -- time (ADR-027) — HOME/AWAY come from prefix-matching this lines.games
+    -- row (ingestion maintains it in production; seeded here so the
+    -- moneyline market resolves fully).
+    INSERT INTO lines.games (game_external_id, league, home_team, away_team, commence_time)
+    VALUES ('nfl_kc_buf_20260913', 'NFL', 'Kansas City Chiefs', 'Buffalo Bills', TIMESTAMPTZ '2026-09-13 17:00:00+00')
+    ON CONFLICT (game_external_id) DO NOTHING;
+
+    INSERT INTO lines.line_snapshots
+        (game_external_id, sportsbook_id, league, market_type, selection, line_value, odds_american, odds_decimal, is_live, captured_at, source)
+    VALUES
+        -- Two-way moneyline: HOME / AWAY
+        ('nfl_kc_buf_20260913', dk_id, 'NFL', 'MONEYLINE', 'Kansas City Chiefs', NULL, -125, 1.800, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api'),
+        ('nfl_kc_buf_20260913', dk_id, 'NFL', 'MONEYLINE', 'Buffalo Bills', NULL, 105, 2.050, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api'),
+
+        -- Total points
+        ('nfl_kc_buf_20260913', dk_id, 'NFL', 'TOTAL', 'Over 47.5', 47.5, -110, 1.909, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api'),
+        ('nfl_kc_buf_20260913', dk_id, 'NFL', 'TOTAL', 'Under 47.5', 47.5, -110, 1.909, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api'),
+
+        -- Point spread
+        ('nfl_kc_buf_20260913', pin_id, 'NFL', 'SPREAD', 'Kansas City Chiefs -2.5', -2.5, -110, 1.909, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api'),
+        ('nfl_kc_buf_20260913', pin_id, 'NFL', 'SPREAD', 'Buffalo Bills +2.5', 2.5, -110, 1.909, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api');
 END $$;
