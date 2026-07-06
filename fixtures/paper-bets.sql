@@ -65,7 +65,11 @@ VALUES
      'OPEN', NOW() - INTERVAL '2 hours'),
     ('a0000001-0000-4000-8000-000000000014', '10000001-0000-5000-8000-000000000014', 'nba_gsw_mil_20260410', 'NBA', 'MONEYLINE', 'GSW', 'HOME', NULL,
      'draftkings', 120, 2.2000, 1.2, 0.4900, 0.0354, 0.0306, 'Home dog value against public favorite.', 'seed-bet-014', NOW() + INTERVAL '8 hours',
-     'OPEN', NOW() - INTERVAL '1 hour')
+     'OPEN', NOW() - INTERVAL '1 hour'),
+    -- Three-way moneyline DRAW bet on the seeded FIFA_WC game (ADR-027)
+    ('a0000001-0000-4000-8000-000000000015', '10000001-0000-5000-8000-000000000015', 'fifawc_fra_bra_20260714', 'FIFA_WC', 'MONEYLINE', 'Draw', 'DRAW', NULL,
+     'draftkings', 220, 3.2000, 0.8, 0.3465, 0.0340, 0.0247, 'Simulation draw probability beats the three-way market price.', 'seed-bet-015', TIMESTAMPTZ '2026-07-14 19:00:00+00',
+     'OPEN', NOW() - INTERVAL '30 minutes')
 ON CONFLICT (idempotency_key) DO NOTHING;
 
 -- ── Grades for the graded bets ─────────────────────────────────────────
@@ -103,5 +107,6 @@ VALUES
     ('c0000001-0000-4000-8000-000000000009', 101.5989, 11.95,  1.5989, 0,  9, 5, 3, 0.0089, NOW() - INTERVAL '5 days 21 hours'),
     ('c0000001-0000-4000-8000-000000000010', 100.7989, 12.75,  0.7989, 0, 10, 5, 4, 0.0075, NOW() - INTERVAL '4 days 20 hours'),
     ('c0000001-0000-4000-8000-000000000011', 102.6171, 14.75,  2.6171, 0, 11, 6, 4, 0.0059, NOW() - INTERVAL '3 days 21 hours'),
-    ('c0000001-0000-4000-8000-000000000012', 102.6171, 18.45,  2.6171, 3, 11, 6, 4, 0.0059, NOW() - INTERVAL '1 hour')
+    ('c0000001-0000-4000-8000-000000000012', 102.6171, 18.45,  2.6171, 3, 11, 6, 4, 0.0059, NOW() - INTERVAL '1 hour'),
+    ('c0000001-0000-4000-8000-000000000013', 102.6171, 19.25,  2.6171, 4, 11, 6, 4, 0.0059, NOW() - INTERVAL '30 minutes')
 ON CONFLICT (id) DO NOTHING;
