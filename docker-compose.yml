@@ -51,7 +51,7 @@ services:
       REDIS_URL: redis://redis:6379
       OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
       ODDS_API_KEY: ${ODDS_API_KEY:-}
-      ODDS_API_SPORTS: ${ODDS_API_SPORTS:-basketball_nba,soccer_fifa_world_cup,soccer_epl}
+      ODDS_API_SPORTS: ${ODDS_API_SPORTS:-basketball_nba,soccer_fifa_world_cup,soccer_epl,baseball_mlb}
       ODDS_API_POLL_INTERVAL: ${ODDS_API_POLL_INTERVAL:-300}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     depends_on:
@@ -79,7 +79,7 @@ services:
       DATABASE_URL: postgres://statistics_svc:localdev@postgres:5432/bookiebreaker?search_path=public
       REDIS_URL: redis://redis:6379
       OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
-      LEAGUES_ENABLED: ${LEAGUES_ENABLED:-NBA,FIFA_WC,EPL}
+      LEAGUES_ENABLED: ${LEAGUES_ENABLED:-NBA,FIFA_WC,EPL,MLB}
       INJURY_SOURCE: ${INJURY_SOURCE:-espn}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     depends_on:
