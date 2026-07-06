@@ -1,4 +1,4 @@
--- Sample NBA and FIFA_WC line snapshots for development testing.
+-- Sample NBA, FIFA_WC, and MLB line snapshots for development testing.
 -- Uses sportsbook keys from the sportsbooks seed data.
 -- These are fictional lines for testing purposes only.
 
@@ -67,4 +67,28 @@ BEGIN
         -- Goal line (soccer spread)
         ('fifawc_fra_bra_20260714', pin_id, 'FIFA_WC', 'SPREAD', 'France -1.5', -1.5, 180, 2.800, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api'),
         ('fifawc_fra_bra_20260714', pin_id, 'FIFA_WC', 'SPREAD', 'Brazil +1.5', 1.5, -220, 1.455, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api');
+
+    -- Game 4 (MLB): New York Yankees vs Los Angeles Dodgers, 2026-07-12.
+    -- line_snapshots has no side column: lines-service derives side at read
+    -- time (ADR-027) — HOME/AWAY come from prefix-matching this lines.games
+    -- row (ingestion maintains it in production; seeded here so the
+    -- moneyline market resolves fully).
+    INSERT INTO lines.games (game_external_id, league, home_team, away_team, commence_time)
+    VALUES ('mlb_nyy_lad_20260712', 'MLB', 'New York Yankees', 'Los Angeles Dodgers', TIMESTAMPTZ '2026-07-12 23:00:00+00')
+    ON CONFLICT (game_external_id) DO NOTHING;
+
+    INSERT INTO lines.line_snapshots
+        (game_external_id, sportsbook_id, league, market_type, selection, line_value, odds_american, odds_decimal, is_live, captured_at, source)
+    VALUES
+        -- Two-way moneyline: HOME / AWAY
+        ('mlb_nyy_lad_20260712', dk_id, 'MLB', 'MONEYLINE', 'New York Yankees', NULL, -130, 1.769, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api'),
+        ('mlb_nyy_lad_20260712', dk_id, 'MLB', 'MONEYLINE', 'Los Angeles Dodgers', NULL, 110, 2.100, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api'),
+
+        -- Total runs
+        ('mlb_nyy_lad_20260712', dk_id, 'MLB', 'TOTAL', 'Over 8.5', 8.5, -110, 1.909, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api'),
+        ('mlb_nyy_lad_20260712', dk_id, 'MLB', 'TOTAL', 'Under 8.5', 8.5, -110, 1.909, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api'),
+
+        -- Run line (baseball spread)
+        ('mlb_nyy_lad_20260712', pin_id, 'MLB', 'SPREAD', 'New York Yankees -1.5', -1.5, 140, 2.400, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api'),
+        ('mlb_nyy_lad_20260712', pin_id, 'MLB', 'SPREAD', 'Los Angeles Dodgers +1.5', 1.5, -165, 1.606, FALSE, NOW() - INTERVAL '1 hour', 'the_odds_api');
 END $$;
