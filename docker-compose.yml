@@ -53,6 +53,11 @@ services:
       ODDS_API_KEY: ${ODDS_API_KEY:-}
       ODDS_API_SPORTS: ${ODDS_API_SPORTS:-basketball_nba,soccer_fifa_world_cup,soccer_epl,baseball_mlb}
       ODDS_API_POLL_INTERVAL: ${ODDS_API_POLL_INTERVAL:-300}
+      # Live SSE source (ADR-007); empty disables the live consumer.
+      # Point at http://sharp-stub:8010 (compose --profile stubs) for the
+      # credential-free live pass, or at the real SharpAPI endpoint.
+      SHARP_API_URL: ${SHARP_API_URL:-}
+      SHARP_API_KEY: ${SHARP_API_KEY:-}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     depends_on:
       postgres:
@@ -305,6 +310,18 @@ services:
       start_period: 10s
     networks:
       - bookiebreaker
+
+  # SharpAPI SSE stub (ADR-007 amendment): replays a World Cup live-frame
+  # fixture so the live-betting path runs without credentials. Opt-in:
+  #   docker compose --profile stubs up  +  SHARP_API_URL=http://sharp-stub:8010
+  sharp-stub:
+    build:
+      context: ./stubs/sharp-stub
+    profiles: ["stubs"]
+    ports:
+      - "8010:8010"
+    environment:
+      STUB_FRAME_INTERVAL_SECONDS: ${STUB_FRAME_INTERVAL_SECONDS:-5}
 
   ui:
     build:
