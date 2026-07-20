@@ -1,5 +1,11 @@
 # bookie-breaker-infra-ops
 
+[![CI](https://img.shields.io/github/actions/workflow/status/Bookie-Breaker/bookie-breaker-infra-ops/ci.yml?branch=main&label=CI&logo=githubactions&logoColor=white)](https://github.com/Bookie-Breaker/bookie-breaker-infra-ops/actions/workflows/ci.yml)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![GitHub_Actions](https://img.shields.io/badge/GitHub_Actions-reusable_workflows-2088FF?logo=githubactions&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
+
 Shared infrastructure: Docker Compose, CI/CD reusable workflows, database init scripts, and operational tooling.
 
 For installing, operating, and season-flipping the stack, see the operator playbooks
