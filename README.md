@@ -2,6 +2,11 @@
 
 Shared infrastructure: Docker Compose, CI/CD reusable workflows, database init scripts, and operational tooling.
 
+For installing, operating, and season-flipping the stack, see the operator playbooks
+[01-installation](https://github.com/Bookie-Breaker/bookie-breaker-docs/blob/main/playbooks/01-installation.md),
+[02-daily-operations](https://github.com/Bookie-Breaker/bookie-breaker-docs/blob/main/playbooks/02-daily-operations.md),
+and [06-seasonal-operations](https://github.com/Bookie-Breaker/bookie-breaker-docs/blob/main/playbooks/06-seasonal-operations.md).
+
 ## Quickstart
 
 ```bash
