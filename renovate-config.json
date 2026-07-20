@@ -149,8 +149,8 @@
       "dependencyDashboardApproval": true
     },
     {
-      "description": "Node runtime is pinned in .nvmrc, mise and the Dockerfile; move them together, never automatically",
-      "matchDepNames": ["node"],
+      "description": "Node runtime is pinned in .nvmrc, mise and the Dockerfile; move them together with @types/node, never automatically",
+      "matchDepNames": ["node", "@types/node"],
       "groupName": "node runtime",
       "dependencyDashboardApproval": true
     },
