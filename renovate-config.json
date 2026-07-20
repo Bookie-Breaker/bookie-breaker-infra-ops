@@ -1,43 +1,139 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended", "docker:enableMajor", ":semanticCommits"],
-  "schedule": ["before 8am on monday"],
-  "timezone": "America/Chicago",
-  "labels": ["chore", "dependencies"],
-  "packageRules": [
-    {
-      "description": "Group all patch updates",
-      "matchUpdateTypes": ["patch"],
-      "groupName": "patch updates",
-      "automerge": true,
-      "automergeType": "pr"
-    },
-    {
-      "description": "Individual PRs for minor updates",
-      "matchUpdateTypes": ["minor"],
-      "automerge": false
-    },
-    {
-      "description": "Individual PRs for major updates",
-      "matchUpdateTypes": ["major"],
-      "automerge": false
-    },
-    {
-      "description": "Group Docker digest updates",
-      "matchDatasources": ["docker"],
-      "matchUpdateTypes": ["digest"],
-      "groupName": "docker digest updates",
-      "automerge": true
-    },
-    {
-      "description": "Group GitHub Actions updates",
-      "matchManagers": ["github-actions"],
-      "groupName": "github actions",
-      "automerge": true
-    }
+  "description": "Shared Renovate preset for all BookieBreaker repos. See ADR-033 in bookie-breaker-docs.",
+  "extends": [
+    "config:best-practices",
+    ":semanticCommits",
+    ":semanticCommitTypeAll(chore)",
+    "mergeConfidence:all-badges"
   ],
+  "timezone": "America/Chicago",
+  "schedule": ["before 8am on monday"],
+  "labels": ["dependencies"],
+  "dependencyDashboard": true,
+  "dependencyDashboardOSVVulnerabilitySummary": "unresolved",
+  "osvVulnerabilityAlerts": true,
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "minimumReleaseAge": "5 days",
+  "internalChecksFilter": "strict",
+  "rangeStrategy": "bump",
+  "prCreation": "not-pending",
+  "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths", "pnpmDedupe"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 8am on monday"]
+  },
   "vulnerabilityAlerts": {
     "enabled": true,
-    "labels": ["security"]
-  }
+    "labels": ["dependencies", "security"],
+    "schedule": ["at any time"],
+    "minimumReleaseAge": null,
+    "dependencyDashboardApproval": false
+  },
+  "packageRules": [
+    {
+      "description": "Never digest-pin our own reusable workflows - they intentionally track @main",
+      "matchDepTypes": ["action"],
+      "matchPackageNames": ["Bookie-Breaker/bookie-breaker-infra-ops", "Bookie-Breaker/**"],
+      "pinDigests": false
+    },
+    {
+      "description": "Major updates require explicit approval from the Dependency Dashboard",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Group OpenTelemetry Python packages - they version in lockstep",
+      "matchDatasources": ["pypi"],
+      "matchPackageNames": ["opentelemetry-*"],
+      "groupName": "opentelemetry (python)"
+    },
+    {
+      "description": "Group Python dev tooling",
+      "matchDatasources": ["pypi"],
+      "matchPackageNames": [
+        "ruff",
+        "mypy",
+        "pytest",
+        "pytest-*",
+        "pip-audit",
+        "types-*",
+        "testcontainers",
+        "respx",
+        "fakeredis"
+      ],
+      "groupName": "python dev tooling"
+    },
+    {
+      "description": "Group OpenTelemetry Go modules - they version in lockstep",
+      "matchPackageNames": ["go.opentelemetry.io/**"],
+      "groupName": "opentelemetry (go)",
+      "matchDatasources": ["go"]
+    },
+    {
+      "description": "Group Charmbracelet TUI libraries",
+      "matchPackageNames": ["github.com/charmbracelet/**", "github.com/muesli/**"],
+      "groupName": "charmbracelet",
+      "matchDatasources": ["go"]
+    },
+    {
+      "description": "Isolate the Go toolchain directive from library bumps",
+      "matchDepTypes": ["golang", "toolchain"],
+      "groupName": "go toolchain"
+    },
+    {
+      "description": "Group Svelte and Vite core",
+      "matchPackageNames": ["svelte", "svelte-check", "@sveltejs/**", "vite", "@vitejs/**"],
+      "groupName": "svelte + vite",
+      "matchDatasources": ["npm"]
+    },
+    {
+      "description": "Group Tailwind",
+      "matchPackageNames": ["tailwindcss", "@tailwindcss/**"],
+      "groupName": "tailwind",
+      "matchDatasources": ["npm"]
+    },
+    {
+      "description": "Group JS lint and format tooling",
+      "matchPackageNames": [
+        "eslint",
+        "eslint-*",
+        "@eslint/**",
+        "typescript-eslint",
+        "@typescript-eslint/**",
+        "prettier",
+        "prettier-*"
+      ],
+      "groupName": "js lint tooling",
+      "matchDatasources": ["npm"]
+    },
+    {
+      "description": "Group JS test tooling",
+      "matchPackageNames": ["vitest", "@vitest/**", "@playwright/test", "playwright", "msw"],
+      "groupName": "js test tooling",
+      "matchDatasources": ["npm"]
+    },
+    {
+      "description": "Group OpenTelemetry JS packages",
+      "matchPackageNames": ["@opentelemetry/**"],
+      "groupName": "opentelemetry (js)",
+      "matchDatasources": ["npm"]
+    },
+    {
+      "description": "Group mise-pinned toolchain versions",
+      "matchManagers": ["mise"],
+      "groupName": "mise tools"
+    },
+    {
+      "description": "Group GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions"
+    },
+    {
+      "description": "Group Docker base images and Compose services",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "groupName": "docker images"
+    }
+  ]
 }
