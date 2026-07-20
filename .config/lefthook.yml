@@ -32,6 +32,7 @@ pre-commit:
       exclude:
         - .claude/**
         - CLAUDE.md
+        - workspace/CLAUDE.md
       group:
         parallel: true
         jobs:
@@ -75,5 +76,17 @@ commit-msg:
   commands:
     gitfluff:
       run: gitfluff lint {1}
+
+post-commit:
+  commands:
+    graphify-notify:
+      skip:
+        - merge
+        - rebase
+        - run: test -n "${CI:-}${GITHUB_ACTIONS:-}"
+      run: |
+        top="$(git rev-parse --show-toplevel)"
+        runner="${top}/../bookie-breaker-infra-ops/workspace/scripts/update-graphify.sh"
+        if [ -x "$runner" ]; then "$runner" notify "$(basename "$top")" || true; fi
 
 # No pre-push hooks (no test suite in infra-ops repo)

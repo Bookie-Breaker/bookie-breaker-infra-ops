@@ -1,0 +1,26 @@
+{
+  "folders": [
+    { "name": "docs", "path": "../../bookie-breaker-docs" },
+    { "name": "infra-ops", "path": ".." },
+    { "name": "lines-service", "path": "../../bookie-breaker-lines-service" },
+    { "name": "statistics-service", "path": "../../bookie-breaker-statistics-service" },
+    { "name": "cli", "path": "../../bookie-breaker-cli" },
+    { "name": "simulation-engine", "path": "../../bookie-breaker-simulation-engine" },
+    { "name": "prediction-engine", "path": "../../bookie-breaker-prediction-engine" },
+    { "name": "agent", "path": "../../bookie-breaker-agent" },
+    { "name": "mcp-server", "path": "../../bookie-breaker-mcp-server" },
+    { "name": "bookie-emulator", "path": "../../bookie-breaker-bookie-emulator" },
+    { "name": "ui", "path": "../../bookie-breaker-ui" }
+  ],
+  "settings": {
+    "git.repositories.autoDetect": true,
+    "files.watcherExclude": {
+      "**/graphify-out/**": true,
+      "**/.venv/**": true,
+      "**/node_modules/**": true
+    },
+    "search.exclude": {
+      "**/graphify-out": true
+    }
+  }
+}

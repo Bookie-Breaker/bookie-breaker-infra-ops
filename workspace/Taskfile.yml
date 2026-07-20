@@ -1,0 +1,251 @@
+version: "3"
+
+# BookieBreaker workspace orchestrator. Lives in
+# bookie-breaker-infra-ops/workspace/ and is symlinked to the workspace root,
+# so WS_ROOT detects which of the two locations it was loaded from.
+vars:
+  WS_ROOT:
+    sh: |
+      d="{{.TASKFILE_DIR}}"
+      if [ -d "$d/bookie-breaker-docs" ]; then
+        printf '%s' "$d"
+      else
+        cd "$d/../.." && pwd
+      fi
+  WS_DIR: "{{.WS_ROOT}}/bookie-breaker-infra-ops/workspace"
+  REPOS_FILE: "{{.WS_DIR}}/repos.txt"
+  REPO_NAMES: awk 'NF && $1 !~ /^#/ {print $1}'
+  COMPOSE_FILE: "{{.WS_ROOT}}/bookie-breaker-infra-ops/docker-compose.yml"
+  COMPOSE_CMD: docker compose -f {{.COMPOSE_FILE}}
+
+tasks:
+  setup:
+    desc: Bootstrap the whole dev environment (clone, tools, hooks, symlinks, graphs)
+    cmds:
+      - "{{.WS_DIR}}/scripts/dev-env-setup.sh"
+
+  bootstrap:
+    desc: Install tools and hooks for all repos (alias of setup, minus cloning)
+    cmds:
+      - "{{.WS_DIR}}/scripts/dev-env-setup.sh --skip-clone --skip-graphs"
+
+  up:
+    desc: Start all services via Docker Compose
+    cmds:
+      - "{{.COMPOSE_CMD}} up -d"
+
+  down:
+    desc: Stop all services and remove containers
+    cmds:
+      - "{{.COMPOSE_CMD}} down"
+
+  build:
+    desc: Build (or rebuild) all containers
+    cmds:
+      - "{{.COMPOSE_CMD}} build"
+
+  logs:
+    desc: Tail logs from all services
+    cmds:
+      - "{{.COMPOSE_CMD}} logs -f"
+
+  logs:service:
+    desc: "Tail logs from a specific service (usage: task logs:service -- lines-service)"
+    cmds:
+      - "{{.COMPOSE_CMD}} logs -f {{.CLI_ARGS}}"
+
+  test:
+    desc: Run every repo's own `task test` (repos without one are skipped)
+    cmds:
+      - |
+        for repo in $({{.REPO_NAMES}} {{.REPOS_FILE}}); do
+          dir="{{.WS_ROOT}}/$repo"
+          if ! task -d "$dir" --dry test >/dev/null 2>&1; then
+            echo "==> $repo (no test task — skipped)"
+            continue
+          fi
+          echo "==> $repo"
+          task -d "$dir" test || exit 1
+        done
+
+  test:one:
+    desc: "Run tests for one repo: task test:one REPO=bookie-breaker-cli"
+    requires:
+      vars: [REPO]
+    cmds:
+      - task -d "{{.WS_ROOT}}/{{.REPO}}" test
+
+  test:go:
+    desc: Run tests in Go repos
+    cmds:
+      - |
+        for repo in $(awk 'NF && $1 !~ /^#/ && $2 == "go" {print $1}' {{.REPOS_FILE}}); do
+          echo "==> $repo"
+          task -d "{{.WS_ROOT}}/$repo" test || exit 1
+        done
+
+  test:python:
+    desc: Run tests in Python repos
+    cmds:
+      - |
+        for repo in $(awk 'NF && $1 !~ /^#/ && $2 == "python" {print $1}' {{.REPOS_FILE}}); do
+          echo "==> $repo"
+          task -d "{{.WS_ROOT}}/$repo" test || exit 1
+        done
+
+  test:ts:
+    desc: Run tests in TypeScript repos
+    cmds:
+      - |
+        for repo in $(awk 'NF && $1 !~ /^#/ && $2 == "ts" {print $1}' {{.REPOS_FILE}}); do
+          echo "==> $repo"
+          task -d "{{.WS_ROOT}}/$repo" test || exit 1
+        done
+
+  lint:
+    desc: Run every repo's own `task lint` (repos without one are skipped)
+    cmds:
+      - |
+        for repo in $({{.REPO_NAMES}} {{.REPOS_FILE}}); do
+          dir="{{.WS_ROOT}}/$repo"
+          if ! task -d "$dir" --dry lint >/dev/null 2>&1; then
+            echo "==> $repo (no lint task — skipped)"
+            continue
+          fi
+          echo "==> $repo"
+          task -d "$dir" lint || exit 1
+        done
+
+  lint:one:
+    desc: "Run lint for one repo: task lint:one REPO=bookie-breaker-ui"
+    requires:
+      vars: [REPO]
+    cmds:
+      - task -d "{{.WS_ROOT}}/{{.REPO}}" lint
+
+  hooks:
+    desc: Run lefthook pre-commit + pre-push checks across all repos
+    cmds:
+      - |
+        for repo in $({{.REPO_NAMES}} {{.REPOS_FILE}}); do
+          echo "==> $repo"
+          (cd "{{.WS_ROOT}}/$repo" &&
+            LEFTHOOK_CONFIG=.config/lefthook.yml lefthook run pre-commit --all-files &&
+            LEFTHOOK_CONFIG=.config/lefthook.yml lefthook run pre-push --all-files) || exit 1
+        done
+
+  hooks:one:
+    desc: "Run lefthook checks for one repo: task hooks:one REPO=bookie-breaker-agent"
+    requires:
+      vars: [REPO]
+    dir: "{{.WS_ROOT}}/{{.REPO}}"
+    cmds:
+      - LEFTHOOK_CONFIG=.config/lefthook.yml lefthook run pre-commit --all-files
+      - LEFTHOOK_CONFIG=.config/lefthook.yml lefthook run pre-push --all-files
+
+  graph:build:
+    desc: Build every repo's knowledge graph and merge into the root graph
+    cmds:
+      - "{{.WS_DIR}}/scripts/update-graphify.sh build"
+
+  graph:update:
+    desc: Process queued graph updates now (no settle wait)
+    cmds:
+      - GRAPHIFY_SETTLE_SECONDS=0 {{.WS_DIR}}/scripts/update-graphify.sh run
+
+  graph:merge:
+    desc: Merge existing per-repo graphs into the root graph only
+    cmds:
+      - "{{.WS_DIR}}/scripts/update-graphify.sh merge"
+
+  graph:status:
+    desc: Show graph updater queue, lock, and log state
+    cmds:
+      - "{{.WS_DIR}}/scripts/update-graphify.sh status"
+
+  gen:
+    desc: Regenerate OpenAPI clients from specs
+    cmds:
+      - echo "Regenerating Go clients from Python service OpenAPI specs..."
+      - cd {{.WS_ROOT}}/bookie-breaker-lines-service && go generate ./...
+      - cd {{.WS_ROOT}}/bookie-breaker-statistics-service && go generate ./...
+      - cd {{.WS_ROOT}}/bookie-breaker-cli && go generate ./...
+      - echo "Regenerating TypeScript clients..."
+      - cd {{.WS_ROOT}}/bookie-breaker-ui && pnpm gen:api
+
+  db:migrate:
+    desc: Run database migrations for all Postgres-backed services
+    cmds:
+      - cd {{.WS_ROOT}}/bookie-breaker-lines-service && go run cmd/migrate/main.go up
+      - cd {{.WS_ROOT}}/bookie-breaker-prediction-engine && uv run alembic upgrade head
+      - cd {{.WS_ROOT}}/bookie-breaker-bookie-emulator && uv run alembic upgrade head
+      - cd {{.WS_ROOT}}/bookie-breaker-agent && uv run alembic upgrade head
+
+  db:seed:
+    desc: Seed databases with development fixture data
+    cmds:
+      - cd {{.WS_ROOT}}/bookie-breaker-infra-ops && ./scripts/seed-data.sh
+
+  db:reset:
+    desc: Drop and recreate all schemas, run migrations, then seed
+    cmds:
+      - task: down
+      - docker volume rm -f bookie-breaker-infra-ops_postgres-data
+      - task: up
+      - sleep 5
+      - task: db:migrate
+      - task: db:seed
+
+  lines-service:dev:
+    desc: Run lines-service locally with air (hot reload)
+    dir: "{{.WS_ROOT}}/bookie-breaker-lines-service"
+    cmds:
+      - air
+
+  statistics-service:dev:
+    desc: Run statistics-service locally with air (hot reload)
+    dir: "{{.WS_ROOT}}/bookie-breaker-statistics-service"
+    cmds:
+      - air
+
+  simulation-engine:dev:
+    desc: Run simulation-engine locally with uvicorn (hot reload)
+    dir: "{{.WS_ROOT}}/bookie-breaker-simulation-engine"
+    cmds:
+      - uv run uvicorn src.main:app --reload --port 8003
+
+  prediction-engine:dev:
+    desc: Run prediction-engine locally with uvicorn (hot reload)
+    dir: "{{.WS_ROOT}}/bookie-breaker-prediction-engine"
+    cmds:
+      - uv run uvicorn src.main:app --reload --port 8004
+
+  bookie-emulator:dev:
+    desc: Run bookie-emulator locally with uvicorn (hot reload)
+    dir: "{{.WS_ROOT}}/bookie-breaker-bookie-emulator"
+    cmds:
+      - uv run uvicorn src.main:app --reload --port 8005
+
+  agent:dev:
+    desc: Run agent locally with uvicorn (hot reload)
+    dir: "{{.WS_ROOT}}/bookie-breaker-agent"
+    cmds:
+      - uv run uvicorn src.main:app --reload --port 8006
+
+  mcp-server:dev:
+    desc: Run mcp-server locally with uvicorn (hot reload)
+    dir: "{{.WS_ROOT}}/bookie-breaker-mcp-server"
+    cmds:
+      - uv run uvicorn src.main:app --reload --port 8007
+
+  cli:dev:
+    desc: Build and run CLI in watch mode
+    dir: "{{.WS_ROOT}}/bookie-breaker-cli"
+    cmds:
+      - go run ./cmd/cli
+
+  ui:dev:
+    desc: Run SvelteKit UI in dev mode (Vite hot reload)
+    dir: "{{.WS_ROOT}}/bookie-breaker-ui"
+    cmds:
+      - pnpm dev
