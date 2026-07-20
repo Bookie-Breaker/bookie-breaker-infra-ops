@@ -1,0 +1,19 @@
+# BookieBreaker repository manifest — single source of truth for workspace
+# scripts and the orchestrator Taskfile.
+#
+# Columns (space-delimited; the ci_check column may contain spaces):
+#   name    stack    ci_check
+#
+# stack:    go | python | ts | docs | infra
+# ci_check: the required status-check context reported by the repo's CI
+bookie-breaker-docs                 docs    lint
+bookie-breaker-infra-ops            infra   lint
+bookie-breaker-lines-service        go      ci / go-ci
+bookie-breaker-statistics-service   go      ci / go-ci
+bookie-breaker-cli                  go      ci / go-ci
+bookie-breaker-simulation-engine    python  ci / python-ci
+bookie-breaker-prediction-engine    python  ci / python-ci
+bookie-breaker-agent                python  ci / python-ci
+bookie-breaker-mcp-server           python  ci / python-ci
+bookie-breaker-bookie-emulator      python  ci / python-ci
+bookie-breaker-ui                   ts      ci / sveltekit-ci
