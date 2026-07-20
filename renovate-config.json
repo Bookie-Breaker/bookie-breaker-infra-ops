@@ -78,11 +78,6 @@
       "matchDatasources": ["go"]
     },
     {
-      "description": "Isolate the Go toolchain directive from library bumps",
-      "matchDepTypes": ["golang", "toolchain"],
-      "groupName": "go toolchain"
-    },
-    {
       "description": "Group Svelte and Vite core",
       "matchPackageNames": ["svelte", "svelte-check", "@sveltejs/**", "vite", "@vitejs/**"],
       "groupName": "svelte + vite",
@@ -134,6 +129,35 @@
       "description": "Group Docker base images and Compose services",
       "matchManagers": ["dockerfile", "docker-compose"],
       "groupName": "docker images"
+    },
+    {
+      "description": "Python runtime is pinned in the Dockerfile and mise; move them together, never automatically. requires-python and ruff target-version are not Renovate-managed and must be updated by hand.",
+      "matchDepNames": ["python"],
+      "groupName": "python runtime",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Go toolchain is pinned in go.mod, mise and the golang base image; move them together, never automatically",
+      "matchDepNames": ["go", "golang"],
+      "groupName": "go toolchain",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Go toolchain directive in go.mod, matched by depType as well as name",
+      "matchDepTypes": ["golang", "toolchain"],
+      "groupName": "go toolchain",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Node runtime is pinned in .nvmrc, mise and the Dockerfile; move them together, never automatically",
+      "matchDepNames": ["node"],
+      "groupName": "node runtime",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "pnpm is pinned in package.json packageManager and mise; move them together",
+      "matchDepNames": ["pnpm", "npm:pnpm"],
+      "groupName": "pnpm"
     }
   ]
 }
